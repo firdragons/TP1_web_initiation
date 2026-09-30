@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<title>Initiation au développement Web</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="tphtml.css">
+    <script>
+function writeText(txt) {
+  document.getElementById("desc").innerHTML = txt;
+}
+function writeDefault(){
+    document.getElementById("desc").innerHTML = "Mouse over the sun and the planets and see the different descriptions";
+    document.getElementById('sun').style.display='none'
+    document.getElementById('mer').style.display='none'
+    document.getElementById('ven').style.display='none'
+}
+</script>
+</head>
+
+<body>
+	<header>
+		Initiation au développement Web
+	</header>
+
+	<div class="contenu">
+		<nav>
+			<a href="accueil.html" class="clic">Accueil</a>
+			<a href="base.html">Les bases du langage HTML</a>
+			<a href="tableau.html">Les tableaux</a>
+			<a href="styles_exercices.html">Les styles CSS : exercices</a>
+			<a href="styles_illustration.html">Les styles CSS : illustration</a>
+			<a href="js_exercices.html">Javascript : exercices</a>
+			<a href="js_ampoule.html">Javascript : l'ampoule</a>
+			<a href="js_planets.html" class="clic">Javascript : planètes</a>
+		</nav>
+			
+		<article>
+            <h1>Javascript events</h1>
+            <img src ="images/planets.gif" width ="145" height ="126" alt="Planets" usemap="#planetmap"  />
+
+<map name="planetmap">
+<area shape ="rect" coords ="0,0,82,126"
+onmouseover="writeText('The Sun and the gas giant planets like Jupiter are by far the largest objects in our Solar System.');document.getElementById('sun').style.display='block'"
+ alt="Sun" onmouseout="writeDefault()"/>
+
+<area shape ="circle" coords ="90,58,3"
+onmouseover="writeText('The planet Mercury is very difficult to study from the Earth because it is always so close to the Sun.');document.getElementById('ven').style.display='block'"
+ alt="Mercury" onmouseout="writeDefault()"/>
+
+<area shape ="circle" coords ="124,58,8"
+onmouseover="writeText('Until the 1960s, Venus was often considered a twin sister to the Earth because Venus is the nearest planet to us, and because the two planets seem to share many characteristics.');document.getElementById('mer').style.display='block'"
+ alt="Venus" onmouseout="writeDefault()"/>
+</map>
+
+<img src ="images/sun.gif" id="sun" width ="145" height ="126" alt="Planets" style="display: none;"  />
+<img src ="images/merglobe.gif" id="mer" width ="145" height ="126" alt="Planets" style="display: none;"  />
+<img src ="images/venglobe.gif" id="ven" width ="145" height ="126" alt="Planets" style="display: none;"/>
+
+<p id="desc">Mouse over the sun and the planets and see the different descriptions.</p>
+
+		</article>
+	</div>
+	
+	<footer>
+		Copyright 2026-2027   Polytech Lyon 3A Info
+	</footer>
+
+</body>
+</html>
