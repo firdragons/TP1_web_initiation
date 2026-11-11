@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ma Todo List — Alpine.js</title>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.17.4/dist/cdn.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 30px 16px;
+      font-family: Arial, sans-serif;
+      background: #f3f5f9;
+      color: #202534;
+      transition: background .2s, color .2s;
+    }
+    .app {
+      max-width: 760px;
+      margin: auto;
+      padding: 28px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0,0,0,.08);
+    }
+    h1 { margin-top: 0; text-align: center; }
+    .toolbar, .stats {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      justify-content: center; margin: 18px 0;
+    }
+    button {
+      border: 0; border-radius: 8px; padding: 10px 14px;
+      cursor: pointer; font-weight: 600;
+    }
+    .primary { background: #4263eb; color: white; }
+    .secondary { background: #e8ecf5; color: #26324a; }
+    .danger { background: #ffe5e5; color: #a52121; }
+    form { display: flex; gap: 10px; margin: 22px 0; }
+    input[type="text"] {
+      flex: 1; min-width: 0; padding: 12px;
+      border: 1px solid #cbd2df; border-radius: 8px; font-size: 1rem;
+    }
+    ul { list-style: none; padding: 0; }
+    li {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px; margin: 10px 0;
+      border: 1px solid #e1e5ed; border-radius: 10px;
+    }
+    li span { flex: 1; overflow-wrap: anywhere; }
+    .done { text-decoration: line-through; opacity: .6; }
+    .empty { text-align: center; color: #687184; padding: 20px; }
+    .stats span { background: #eef1f8; padding: 8px 12px; border-radius: 20px; }
+    .filter { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .filter button.active { background: #4263eb; color: white; }
+
+    .app.dark {
+      background: #1e1e1e; color: #f5f5f5;
+    }
+    .app.dark li { border-color: #444; }
+    .app.dark input { background: #292929; color: white; border-color: #555; }
+    .app.dark .secondary, .app.dark .stats span {
+      background: #383838; color: #f5f5f5;
+    }
+    .app.dark .empty { color: #bbb; }
+
+    .app.dyslexie { line-height: 1.8; letter-spacing: .05em; word-spacing: .12em; }
+    .app.dyslexie p, .app.dyslexie li { max-width: 70ch; font-size: 1.08rem; }
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid #f59e0b; outline-offset: 2px;
+    }
+    @media (max-width: 520px) {
+      .app { padding: 18px; }
+      form { flex-direction: column; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app"
+        x-data="todoApp()"
+        :class="{ dark: darkMode, dyslexie: dyslexie }"
+        x-init="init()">
+
+    <h1>📝 Ma Todo List</h1>
+
+    <div class="toolbar">
+      <button @click="darkMode = !darkMode; savePreferences()" >
+        🌙 Thème sombre
+      </button>
+      <button  @click="dyslexie = !dyslexie; savePreferences()">
+        📚 Lecture facilitée
+      </button>
+    </div>
+
+    <div class="stats" aria-live="polite">
+      <span>Total : <strong x-text="taches.length"></strong></span>
+      <span>À faire : <strong x-text="remaining"></strong></span>
+      <span>Terminées : <strong x-text="completed"></strong></span>
+    </div>
+
+    <form @submit.prevent="addTask()">
+      <input type="text" x-model="nouvelleTache" placeholder="Ex. Réviser Alpine.js"
+             aria-label="Nouvelle tâche" maxlength="200">
+      <button class="primary" type="submit">＋ Ajouter</button>
+    </form>
+
+    <div class="filter" aria-label="Filtres des tâches">
+      <button class="secondary" :class="{ active: filtre === 'toutes' }"
+              @click="filtre = 'toutes'">Toutes</button>
+      <button class="secondary" :class="{ active: filtre === 'actives' }"
+              @click="filtre = 'actives'">À faire</button>
+      <button class="secondary" :class="{ active: filtre === 'terminees' }"
+              @click="filtre = 'terminees'">Terminées</button>
+    </div>
+
+    <ul>
+      <template x-for="tache in tachesFiltrees" :key="tache.id">
+        <li>
+          <input type="checkbox" :checked="tache.terminee"
+                 @change="toggleTask(tache.id)"
+                 :aria-label="'Marquer ' + tache.texte + ' comme terminée">
+          <span :class="{ done: tache.terminee }" x-text="tache.texte"></span>
+          <button class="danger" @click="deleteTask(tache.id)"
+                  :aria-label="'Supprimer ' + tache.texte">🗑️</button>
+        </li>
+      </template>
+    </ul>
+
+    <p class="empty" x-show="tachesFiltrees.length === 0">
+      Aucune tâche à afficher.
+    </p>
+
+    <div class="toolbar">
+      <button class="secondary" @click="clearCompleted()" x-show="completed > 0">
+        Supprimer les tâches terminées
+      </button>
+      <button class="danger" @click="clearAll()" x-show="taches.length > 0">
+        Tout supprimer
+      </button>
+    </div>
+  </main>
+
+  <script>
+    function todoApp() {
+      return {
+        taches: [],
+        nouvelleTache: '',
+        darkMode: false,
+        dyslexie: false,
+        filtre: 'toutes',
+
+        init() {
+          // Récupérer les tâches sauvegardées
+          try {
+            this.taches = JSON.parse(localStorage.getItem('taches')) || [];
+          } catch (e) {
+            this.taches = [];
+          }
+
+          // Récupérer les préférences sauvegardées
+          this.darkMode = localStorage.getItem('theme') === 'dark';
+          this.dyslexie = localStorage.getItem('dyslexie') === 'true';
+        },
+
+        get completed() {
+          return this.taches.filter(t => t.terminee).length;
+        },
+
+        get remaining() {
+          return this.taches.length - this.completed;
+        },
+
+        get tachesFiltrees() {
+          if (this.filtre === 'actives') return this.taches.filter(t => !t.terminee);
+          if (this.filtre === 'terminees') return this.taches.filter(t => t.terminee);
+          return this.taches;
+        },
+
+        addTask() {
+          const texte = this.nouvelleTache.trim();
+          if (!texte) return;
+
+          this.taches.push({
+            id: Date.now(),
+            texte: texte,
+            terminee: false
+          });
+          this.nouvelleTache = '';
+          this.saveTasks();
+        },
+
+        toggleTask(id) {
+          const tache = this.taches.find(t => t.id === id);
+          if (tache) tache.terminee = !tache.terminee;
+          this.saveTasks();
+        },
+
+        deleteTask(id) {
+          this.taches = this.taches.filter(t => t.id !== id);
+          this.saveTasks();
+        },
+
+        clearCompleted() {
+          this.taches = this.taches.filter(t => !t.terminee);
+          this.saveTasks();
+        },
+
+        clearAll() {
+          if (confirm('Supprimer toutes les tâches ?')) {
+            this.taches = [];
+            this.saveTasks();
+          }
+        },
+
+        saveTasks() {
+          localStorage.setItem('taches', JSON.stringify(this.taches));
+        },
+
+        savePreferences() {
+          localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
+          localStorage.setItem('dyslexie', this.dyslexie ? 'true' : 'false');
+        }
+      };
+    }
+  </script>
+</body>
+</html>

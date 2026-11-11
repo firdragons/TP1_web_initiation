@@ -70,7 +70,7 @@ function Appeler_Range()
 	// appel de la fonction Fibonacci
 	const fibo = Range(stop,start,step);
 	// affichage du résultat dans la page html
-	let resultat = document.getElementById("resultat_range").innerHTML = "Range("+stop+",["+start+"], ["+step+"])=[" + fibo+"]";
+	let resultat = document.getElementById("resultat_range").innerHTML = "Range(["+stop+"],["+start+"], ["+step+"])=[" + fibo+"]";
 	
 }
 
@@ -94,7 +94,7 @@ function Range(stop, start=0, step=1)
 	}
 	const range = [];
 	let i = 0;
-	while(stop>(start)){
+	while(stop>start){
 		range[i]=start;
 		start=start+step;
 		i++;
